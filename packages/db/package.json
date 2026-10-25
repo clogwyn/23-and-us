@@ -1,0 +1,13 @@
+{
+  "name": "@reno/db",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "bash test/run.sh",
+    "lint": "true",
+    "typecheck": "true",
+    "db:push": "supabase db push --workdir .",
+    "db:types": "supabase gen types typescript --linked --workdir . --schema public > src/database.gen.ts"
+  }
+}
