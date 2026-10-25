@@ -53,7 +53,7 @@ Both values are public by design (they end up in the browser); the database's ro
 - **Site URL**: your Vercel URL, e.g. `https://23-and-us.vercel.app`
 - **Redirect URLs**: add `https://23-and-us.vercel.app/**` and, for branch previews, `https://*-clogwyn.vercel.app/**`
 
-**Authentication → Emails → Magic Link** — replace the body so the link works when the email is opened on a different device, and the 6-digit code is included:
+**Optional, needs a custom email sender.** Supabase's Free plan only allows template edits once custom SMTP is configured (Authentication → Emails → Set up SMTP; iCloud Mail with an app-specific password, or Resend with your own domain, both work). Without it, the default email is fine, but its link only works in the browser that requested it. With a sender configured, set **Magic Link** to this, so the link works on any device and includes a 6-digit code:
 
 ```html
 <h2>Sign in to 23 &amp; Us</h2>
@@ -62,7 +62,7 @@ Both values are public by design (they end up in the browser); the database's ro
 <p>If you didn't ask for this, ignore this email.</p>
 ```
 
-Supabase's built-in email sender is rate-limited to a few emails per hour. Sessions last a long time, so two people rarely notice; if it becomes a problem, add a custom SMTP sender (Authentication → Emails → SMTP settings).
+Supabase's built-in email sender is also rate-limited to a few emails per hour. Sessions last a long time, so two people rarely notice; if it becomes a problem, add a custom SMTP sender (Authentication → Emails → SMTP settings).
 
 ## Restore
 

@@ -50,8 +50,9 @@ export function SignInForm({ next }: { next: string }) {
     return (
       <form className="form" onSubmit={verify}>
         <p>
-          Email sent to <strong>{email}</strong>. Open the link in it, or type the code here.
+          Email sent to <strong>{email}</strong>. Open the link in it <strong>on this device</strong> to sign in.
         </p>
+        <p className="muted">If your email includes a 6-digit code, you can type it here instead.</p>
         <label htmlFor="code">6-digit code</label>
         <input
           id="code"
@@ -62,7 +63,6 @@ export function SignInForm({ next }: { next: string }) {
           value={code}
           onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
           required
-          autoFocus
         />
         {error && <p className="form-error" role="alert">{error}</p>}
         <div className="form-actions">

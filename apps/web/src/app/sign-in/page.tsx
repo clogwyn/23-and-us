@@ -15,7 +15,7 @@ export default async function SignIn({ searchParams }: { searchParams: Promise<{
         </div>
         <div className="auth-body">
           <h1>Sign in</h1>
-          <p className="muted">We'll email you a link and a 6-digit code. No password needed.</p>
+          <p className="muted">We'll email you a sign-in link. No password needed. Open the email on this device, in this browser.</p>
           {sp.error === "link" && (
             <p className="form-error" role="alert">That sign-in link has expired or was already used. Request a new one below.</p>
           )}
