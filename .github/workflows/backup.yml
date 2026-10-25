@@ -1,0 +1,73 @@
+# Nightly database backup. The Supabase Free plan has no automatic backups, so this is the only restore point.
+# Produces an encrypted archive (roles + schema + data) kept as a workflow artifact for 30 days.
+# Restore procedure: docs/operations.md
+name: Backup
+
+on:
+  schedule:
+    - cron: "17 2 * * *" # 02:17 UTC daily (off the hour to avoid scheduler congestion)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backup
+  cancel-in-progress: false
+
+jobs:
+  database:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check secrets are configured
+        run: |
+          missing=0
+          [ -n "$SUPABASE_DB_URL" ]   || { echo "::error::SUPABASE_DB_URL is not set"; missing=1; }
+          [ -n "$BACKUP_PASSPHRASE" ] || { echo "::error::BACKUP_PASSPHRASE is not set"; missing=1; }
+          exit $missing
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.122.0
+
+      - name: Dump roles, schema and data
+        working-directory: packages/db
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/dump"; mkdir -p "$out"
+          supabase db dump --db-url "$SUPABASE_DB_URL" --role-only -f "$out/roles.sql"
+          supabase db dump --db-url "$SUPABASE_DB_URL"             -f "$out/schema.sql"
+          supabase db dump --db-url "$SUPABASE_DB_URL" --data-only --use-copy -f "$out/data.sql"
+          # Sanity: refuse to store an empty or truncated backup.
+          for f in roles schema data; do
+            test -s "$out/$f.sql" || { echo "::error::$f.sql is empty"; exit 1; }
+          done
+          grep -q 'CREATE TABLE "public"."tasks"\|CREATE TABLE IF NOT EXISTS "public"."tasks"' "$out/schema.sql" \
+            || { echo "::error::schema dump has no tasks table"; exit 1; }
+          ls -la "$out"
+
+      - name: Encrypt
+        run: |
+          set -euo pipefail
+          stamp="$(date -u +%Y-%m-%dT%H%MZ)"
+          echo "STAMP=$stamp" >> "$GITHUB_ENV"
+          tar -C "$RUNNER_TEMP/dump" -czf "$RUNNER_TEMP/db-$stamp.tar.gz" .
+          gpg --batch --yes --pinentry-mode loopback --passphrase "$BACKUP_PASSPHRASE" \
+              --symmetric --cipher-algo AES256 \
+              -o "$RUNNER_TEMP/db-$stamp.tar.gz.gpg" "$RUNNER_TEMP/db-$stamp.tar.gz"
+          rm -rf "$RUNNER_TEMP/dump" "$RUNNER_TEMP/db-$stamp.tar.gz"
+          ls -la "$RUNNER_TEMP"/*.gpg
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-${{ env.STAMP }}
+          path: ${{ runner.temp }}/db-${{ env.STAMP }}.tar.gz.gpg
+          retention-days: 30
+          if-no-files-found: error
+          compression-level: 0 # already compressed + encrypted
