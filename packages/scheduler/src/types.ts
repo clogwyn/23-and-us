@@ -1,4 +1,4 @@
-import type { ConstraintType, DayDate, DependencyType } from "@reno/domain";
+import type { ConstraintType, DayDate, DependencyType } from "@23andus/domain";
 import type { Calendar } from "./calendar.ts";
 
 export interface SchedTask {

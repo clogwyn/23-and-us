@@ -1,5 +1,5 @@
 -- ════════════════════════════════════════════════════════════════════════════
--- Reno · private file storage
+-- 23 & Us · private file storage
 -- Object keys: <household_id>/<attachment_id>/<filename>
 -- Access follows household membership; files are only ever served via signed URLs.
 -- ════════════════════════════════════════════════════════════════════════════

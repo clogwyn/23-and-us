@@ -12,7 +12,7 @@ export default tseslint.config(
       "@typescript-eslint/consistent-type-imports": "error",
     },
   },
-  // scheduler: pure engine — may depend on @reno/domain only, never on I/O or the app.
+  // scheduler: pure engine — may depend on @23andus/domain only, never on I/O or the app.
   {
     files: ["packages/scheduler/src/**/*.ts"],
     rules: {
@@ -20,7 +20,7 @@ export default tseslint.config(
         "error",
         {
           patterns: [
-            { group: ["@reno/db", "@reno/db/*", "@supabase/*", "next", "next/*", "react", "node:*"], message: "scheduler must stay pure: no I/O or framework imports." },
+            { group: ["@23andus/db", "@23andus/db/*", "@supabase/*", "next", "next/*", "react", "node:*"], message: "scheduler must stay pure: no I/O or framework imports." },
           ],
         },
       ],
@@ -32,7 +32,7 @@ export default tseslint.config(
     rules: {
       "no-restricted-imports": [
         "error",
-        { patterns: [{ group: ["@reno/*", "@supabase/*", "next", "react", "node:*"], message: "domain is a leaf package." }] },
+        { patterns: [{ group: ["@23andus/*", "@supabase/*", "next", "react", "node:*"], message: "domain is a leaf package." }] },
       ],
     },
   },

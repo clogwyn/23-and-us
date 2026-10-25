@@ -1,4 +1,4 @@
-import { fromEpochDay, toEpochDay, type DayDate } from "@reno/domain";
+import { fromEpochDay, toEpochDay, type DayDate } from "@23andus/domain";
 
 /**
  * Maps calendar dates onto a monotonic integer "working time" axis.

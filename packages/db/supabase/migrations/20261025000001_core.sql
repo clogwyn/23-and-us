@@ -1,5 +1,5 @@
 -- ════════════════════════════════════════════════════════════════════════════
--- Reno · core schema
+-- 23 & Us · core schema
 --
 -- Principles
 --  • Every row carries household_id; composite FKs make it impossible for a row to

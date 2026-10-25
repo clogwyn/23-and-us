@@ -41,7 +41,7 @@ importers:
 
   packages/scheduler:
     dependencies:
-      '@reno/domain':
+      '@23andus/domain':
         specifier: workspace:*
         version: link:../domain
     devDependencies:

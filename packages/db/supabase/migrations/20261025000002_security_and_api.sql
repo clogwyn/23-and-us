@@ -1,5 +1,5 @@
 -- ════════════════════════════════════════════════════════════════════════════
--- Reno · row-level security, privileges, RPCs and roll-up views
+-- 23 & Us · row-level security, privileges, RPCs and roll-up views
 -- ════════════════════════════════════════════════════════════════════════════
 
 -- ── Privileges ───────────────────────────────────────────────────────────────
@@ -99,7 +99,7 @@ begin
 end $$;
 
 -- ── Scheduling write path ────────────────────────────────────────────────────
--- The app computes the schedule with @reno/scheduler, then submits it here.
+-- The app computes the schedule with @23andus/scheduler, then submits it here.
 -- p_version must equal the projects.schedule_version it read; if an edit landed
 -- in between, nothing is written and false is returned (caller recomputes).
 --

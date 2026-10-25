@@ -16,7 +16,7 @@
  *
  * Constraints win over links (MS Project default); conflicts are reported as warnings.
  */
-import type { DayDate } from "@reno/domain";
+import type { DayDate } from "@23andus/domain";
 import { allDaysCalendar } from "./calendar.ts";
 import { prepareGraph, type Edge } from "./graph.ts";
 import type { ScheduleInput, ScheduleResult, ScheduleWarning, TaskSchedule, TaskState } from "./types.ts";

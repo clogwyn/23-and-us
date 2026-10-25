@@ -1,4 +1,4 @@
-import { diffDays } from "@reno/domain";
+import { diffDays } from "@23andus/domain";
 import type { TaskSchedule } from "./types.ts";
 
 export interface ScheduleChange {

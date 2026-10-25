@@ -7,7 +7,7 @@
  *   - summary as predecessor: FS or FF (driven by its finish = max of leaf finishes)
  *   - summary as successor:   FS or SS (constrains its start = every leaf's start)
  */
-import { CONSTRAINT_TYPES, DEPENDENCY_TYPES } from "@reno/domain";
+import { CONSTRAINT_TYPES, DEPENDENCY_TYPES } from "@23andus/domain";
 import type { SchedDependency, SchedTask, ScheduleError } from "./types.ts";
 
 export interface Edge {

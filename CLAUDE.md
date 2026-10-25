@@ -1,4 +1,4 @@
-# Reno — working rules for AI agents
+# 23 & Us — working rules for AI agents
 
 ## Git (always, every session)
 - `main` holds working builds only. Never commit WIP to `main`.
@@ -8,7 +8,7 @@
 
 ## Architecture boundaries (enforced by ESLint — do not weaken the rules)
 - `packages/domain` — leaf: types, Zod schemas, money/date/predecessor-code utils. No internal deps.
-- `packages/scheduler` — pure CPM engine. Depends on `@reno/domain` only. No I/O, no framework.
+- `packages/scheduler` — pure CPM engine. Depends on `@23andus/domain` only. No I/O, no framework.
 - `packages/db` — SQL migrations (source of truth), seed, generated types.
 - `apps/web/src/ui` — design-system primitives; imports nothing from `features/`.
 - `apps/web/src/features/<module>` — feature slices. Cross-feature use only via the module's `index.ts`.

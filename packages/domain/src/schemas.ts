@@ -1,6 +1,6 @@
 /**
  * Input validation at the trust boundary (forms, server actions).
- * DB rows are typed by generated types in @reno/db; these schemas validate what users send.
+ * DB rows are typed by generated types in @23andus/db; these schemas validate what users send.
  */
 import { z } from "zod";
 import { isDayDate, type DayDate } from "./daydate.ts";

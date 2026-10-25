@@ -1,5 +1,5 @@
 {
-  "name": "@reno/scheduler",
+  "name": "@23andus/scheduler",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -10,7 +10,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@reno/domain": "workspace:*"
+    "@23andus/domain": "workspace:*"
   },
   "devDependencies": {
     "fast-check": "^3.23.2"

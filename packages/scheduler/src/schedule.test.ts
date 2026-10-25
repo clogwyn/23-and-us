@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import fc from "fast-check";
-import { dayDate, toEpochDay, type DayDate } from "@reno/domain";
+import { dayDate, toEpochDay, type DayDate } from "@23andus/domain";
 import { schedule } from "./schedule.ts";
 import { diffSchedules } from "./diff.ts";
 import type { SchedDependency, SchedTask, ScheduleInput, ScheduleResult, TaskSchedule } from "./types.ts";
