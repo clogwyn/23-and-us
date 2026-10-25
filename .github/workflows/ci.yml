@@ -38,10 +38,48 @@ jobs:
 
       - run: pnpm check
 
+      - name: Build the web app
+        run: pnpm --filter @23andus/web build
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+          NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_placeholder
+
+  integration:
+    # Full local Supabase (Postgres 17, auth, API, storage, realtime) in Docker:
+    # applies every migration, then runs the app's save/load, security and storage tests.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.122.0
+      - name: Start local Supabase
+        working-directory: packages/db
+        run: supabase start -x studio,imgproxy,edge-runtime,logflare,vector,postgres-meta,supavisor
+      - name: Run integration tests
+        working-directory: packages/db
+        run: |
+          set -a
+          eval "$(supabase status -o env)"
+          set +a
+          cd ../../apps/web && pnpm test:integration
+      - name: Stop local Supabase
+        if: always()
+        working-directory: packages/db
+        run: supabase stop --no-backup
+
   migrate:
-    # Only main is ever deployed. Runs after checks pass; a no-op when nothing is pending.
+    # Only main is ever deployed. Runs after checks and integration pass; a no-op when nothing is pending.
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: check
+    needs: [check, integration]
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     concurrency:
