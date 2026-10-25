@@ -12,7 +12,7 @@ const out = await build({
   legalComments: "none",
 });
 const js = out.outputFiles[0].text.replaceAll("</script", "<\\/script");
-const css = await readFile("src/styles.css", "utf8");
+const css = (await readFile("src/styles.css", "utf8")) + "\n" + (await readFile("src/views.css", "utf8"));
 const shell = await readFile("src/shell.html", "utf8");
 
 const house = `data:image/jpeg;base64,${(await readFile("src/assets/house-front.jpg")).toString("base64")}`;

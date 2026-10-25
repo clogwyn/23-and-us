@@ -25,12 +25,16 @@ import {
 } from "@23andus/scheduler";
 import type { PDep, PState, PStatus, PTask } from "./model.ts";
 import { AREAS, sampleState } from "./sample.ts";
+import type { ViewCtx } from "./ctx.ts";
+import { renderBoard, wireBoard } from "./board.ts";
+import { renderGantt, wireGantt } from "./gantt.ts";
+import { beginPointerDrag, consumeDragClick, ghost } from "./drag.ts";
 
 type Col = "title" | "area" | "duration" | "preds" | "status";
 
 const STORE_KEY = "23andus-prototype-v1";
 const COLS: Col[] = ["title", "area", "duration", "preds", "status"];
-const STATUS_LABEL: Record<PStatus, string> = { todo: "To do", in_progress: "In progress", done: "Done" };
+const STATUS_LABEL: Record<PStatus, string> = { todo: "To do", in_progress: "In progress", blocked: "Blocked", done: "Done" };
 const CONSTRAINT_LABEL: Record<ConstraintType, string> = {
   ASAP: "As soon as possible",
   SNET: "Start no earlier than",
@@ -49,7 +53,18 @@ const view = {
   criticalOnly: false,
   area: "",
   slip: null as { id: string; delta: number } | null,
+  mode: loadMode(),
 };
+
+type Mode = "table" | "board" | "gantt";
+function loadMode(): Mode {
+  try {
+    const m = localStorage.getItem(`${STORE_KEY}-view`);
+    return m === "board" || m === "gantt" ? m : "table";
+  } catch {
+    return "table";
+  }
+}
 
 function load(): PState | null {
   try {
@@ -229,6 +244,13 @@ const CARET = `<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M1 3l4 4 4-4
 function render() {
   renderBlock();
   renderBanner();
+  for (const m of ["table", "board", "gantt"] as const) {
+    const el = document.getElementById(`view-${m}`) as HTMLElement;
+    el.hidden = view.mode !== m;
+    document.querySelector(`[data-mode="${m}"]`)?.setAttribute("aria-pressed", String(view.mode === m));
+  }
+  if (view.mode === "board") renderBoard($("#view-board"), ctx);
+  if (view.mode === "gantt") renderGantt($("#view-gantt"), ctx);
   const rows = visibleRows();
   rowsEl.innerHTML = rows.map((r) => rowHtml(r.node.id, r.wbs, r.depth, r.hasChildren)).join("") ||
     `<tr><td colspan="10" class="muted" style="padding:16px">No tasks match these filters.</td></tr>`;
@@ -272,7 +294,7 @@ function rowHtml(id: string, code: string, depth: number, summary: boolean): str
 
   return `<tr data-id="${id}" class="${cls}" aria-selected="${view.selected === id}">
     <td class="tape" title="${s?.isCritical ? "On the critical path" : ""}"></td>
-    <td class="wbs">${code}</td>
+    <td class="wbs"><span class="grip" data-grip="${id}" title="Drag to move" aria-hidden="true"></span>${code}</td>
     ${td("title", `<span class="t-cell" style="padding-left:${depth * 18}px">${lead}<span class="t-text">${esc(t.title)}</span></span>`)}
     ${td("area", esc(t.area))}
     ${td("duration", summary ? `<span class="derived">${s?.durationDays ?? 0}</span>` : String(t.duration), `class="num"`)}
@@ -503,7 +525,7 @@ function applyEdit(id: string, col: Col, value: string) {
 function setStatus(task: PTask, status: PStatus): undefined {
   const s = sched(task.id);
   task.status = status;
-  if (status === "todo") {
+  if (status === "todo" || status === "blocked") {
     task.actualStart = null;
     task.actualFinish = null;
   } else if (status === "in_progress") {
@@ -617,6 +639,7 @@ function remove(id: string) {
 
 // ── Events ───────────────────────────────────────────────────────────────────
 rowsEl.addEventListener("click", (e) => {
+  if (consumeDragClick()) return;
   const target = e.target as HTMLElement;
   const caret = target.closest<HTMLElement>("[data-caret]");
   if (caret) {
@@ -696,7 +719,7 @@ document.addEventListener("keydown", (e) => {
       if (id) startEdit(id, "title");
       return;
     case "Tab":
-      if (!id) return;
+      if (!id || view.mode !== "table") return;
       e.preventDefault();
       return e.shiftKey ? outdent(id) : indent(id);
     case "Backspace":
@@ -805,6 +828,112 @@ function toast(msg: string) {
   clearTimeout(toastTimer);
   toastTimer = window.setTimeout(() => { el.hidden = true; }, 4200);
 }
+
+// ── View context, view switching, row dragging ────────────────────────────────
+const ctx: ViewCtx & { toggle(id: string): void; scheduleOf(s: PState): ReturnType<typeof schedule> } = {
+  state: () => state,
+  result: () => derived.result,
+  byId: (id) => derived.byId.get(id),
+  isSummary: (id) => derived.hasKids.has(id),
+  sched,
+  rows: visibleRows,
+  selected: () => view.selected,
+  select: (id) => { view.selected = id; view.slip = null; },
+  commit,
+  setStatus,
+  toast,
+  wbs: (id) => derived.idToWbs.get(id) ?? "?",
+  fmt,
+  fmtLong,
+  esc,
+  statusLabel: STATUS_LABEL,
+  toggle: (id) => {
+    if (view.collapsed.has(id)) view.collapsed.delete(id);
+    else view.collapsed.add(id);
+    render();
+  },
+  scheduleOf: (s) => schedule(toInput(s)),
+};
+
+wireBoard($("#view-board"), ctx, render);
+wireGantt($("#view-gantt"), ctx, render);
+
+document.querySelectorAll<HTMLButtonElement>("[data-mode]").forEach((b) =>
+  b.addEventListener("click", () => {
+    view.mode = b.dataset.mode as Mode;
+    view.editing = null;
+    try { localStorage.setItem(`${STORE_KEY}-view`, view.mode); } catch { /* not persisted */ }
+    render();
+  }),
+);
+
+/**
+ * Table row drag by the grip: drop on the top or bottom of a row to place it before or after;
+ * drop on the middle of a group to put it inside. Use Tab to make a plain task into a group.
+ */
+rowsEl.addEventListener("pointerdown", (down) => {
+  const grip = (down.target as HTMLElement).closest<HTMLElement>("[data-grip]");
+  if (!grip) return;
+  const id = grip.dataset.grip as string;
+  const srcRow = grip.closest("tr");
+  let g: ReturnType<typeof ghost> | null = null;
+  let over: HTMLTableRowElement | null = null;
+  let zone: "before" | "into" | "after" = "after";
+  const clear = () => over?.classList.remove("drop-before", "drop-into", "drop-after");
+
+  beginPointerDrag(down, {
+    onStart(e) {
+      srcRow?.classList.add("dragging");
+      g = ghost(title(id));
+      g.at(e);
+    },
+    onMove(e) {
+      g?.at(e);
+      const tr = document.elementFromPoint(e.clientX, e.clientY)?.closest<HTMLTableRowElement>("tr[data-id]") ?? null;
+      clear();
+      over = tr && tr.dataset.id !== id ? tr : null;
+      if (!over) return;
+      const r = over.getBoundingClientRect();
+      const f = (e.clientY - r.top) / r.height;
+      // Only groups accept a task "inside"; dropping into a plain task would silently turn its work into a group.
+      zone = derived.hasKids.has(over.dataset.id as string)
+        ? f < 0.3 ? "before" : f > 0.7 ? "after" : "into"
+        : f < 0.5 ? "before" : "after";
+      over.classList.add(`drop-${zone}`);
+    },
+    onDrop() {
+      g?.remove();
+      srcRow?.classList.remove("dragging");
+      clear();
+      const targetId = over?.dataset.id;
+      if (!targetId) return;
+      commit((s) => {
+        const moved = s.tasks.find((t) => t.id === id);
+        const target = s.tasks.find((t) => t.id === targetId);
+        if (!moved || !target) return "That task no longer exists.";
+        for (let cur: string | null = target.id; cur; cur = s.tasks.find((t) => t.id === cur)?.parentId ?? null)
+          if (cur === id) return "A task can't go inside its own subtask.";
+        if (zone === "into") {
+          moved.parentId = target.id;
+          moved.sort = (siblingsOf(s, target.id).filter((t) => t.id !== id).at(-1)?.sort ?? 0) + 1024;
+          view.collapsed.delete(target.id);
+          return;
+        }
+        const sibs = siblingsOf(s, target.parentId).filter((t) => t.id !== id);
+        const i = sibs.findIndex((t) => t.id === target.id);
+        moved.parentId = target.parentId;
+        moved.sort = zone === "before"
+          ? sortBetween(sibs[i - 1]?.sort ?? null, target.sort)
+          : sortBetween(target.sort, sibs[i + 1]?.sort ?? null);
+      });
+    },
+    onCancel() {
+      g?.remove();
+      srcRow?.classList.remove("dragging");
+      clear();
+    },
+  });
+});
 
 // ── Boot ─────────────────────────────────────────────────────────────────────
 ($("#fArea") as HTMLSelectElement).insertAdjacentHTML("beforeend", AREAS.map((a) => `<option value="${esc(a)}">${esc(a)}</option>`).join(""));

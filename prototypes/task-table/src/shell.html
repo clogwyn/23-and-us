@@ -7,20 +7,24 @@
 
 <div class="app" id="app">
   <header class="block" aria-label="Project">
-    <div class="block-photo"><img src="__HOUSE__" alt="Number 23 from the front path: timber cladding, white window frames and the green front door" width="540" height="386"></div>
-    <div class="block-mark">
+    <div class="block-photo">
+      <img src="__HOUSE__" alt="Number 23 from the front path: timber cladding, white window frames and the green front door" width="540" height="386">
       <span class="logo">23 <span class="amp">&amp;</span> Us</span>
     </div>
     <div class="block-title">
       <span class="field-label">Project</span>
       <h1 id="projectName">Kitchen &amp; rear extension</h1>
-      <span class="field-sub">House built 1964. Every day counts as a working day.</span>
     </div>
     <dl class="block-fields" id="blockFields"></dl>
   </header>
 
   <div class="toolbar" role="toolbar" aria-label="View">
     <div class="toolbar-group">
+      <span class="seg views" role="group" aria-label="View">
+        <button type="button" data-mode="table" aria-pressed="true">Table</button>
+        <button type="button" data-mode="board" aria-pressed="false">Board</button>
+        <button type="button" data-mode="gantt" aria-pressed="false">Gantt</button>
+      </span>
       <label class="check"><input type="checkbox" id="fCritical"> Critical path only</label>
       <label class="field-inline" for="fArea">Area
         <select id="fArea"><option value="">All areas</option></select>
@@ -37,7 +41,7 @@
 
   <main class="work">
     <section class="sheet" aria-label="Tasks">
-      <div class="table-wrap">
+      <div class="table-wrap" id="view-table">
         <table class="grid" id="grid">
           <colgroup>
             <col class="c-tape"><col class="c-wbs"><col class="c-title"><col class="c-area"><col class="c-dur">
@@ -53,6 +57,8 @@
           <tbody id="rows"></tbody>
         </table>
       </div>
+      <div id="view-board" hidden></div>
+      <div class="gantt-wrap" id="view-gantt" hidden></div>
       <p class="keys" aria-label="Keyboard shortcuts">
         <span><kbd>↑</kbd><kbd>↓</kbd> select</span>
         <span><kbd>Enter</kbd> edit</span>

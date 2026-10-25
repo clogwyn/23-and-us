@@ -1,6 +1,6 @@
 import type { ConstraintType, DependencyType } from "@23andus/domain";
 
-export type PStatus = "todo" | "in_progress" | "done";
+export type PStatus = "todo" | "in_progress" | "blocked" | "done";
 
 export interface PTask {
   id: string;

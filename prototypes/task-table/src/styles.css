@@ -10,6 +10,7 @@
   --rule-strong: #b7bdb0;
   --teak: #7f5130;      /* title block */
   --teak-ink: #f6efe4;
+  --cladding: #2c1d1a;  /* sampled from the house's timber */
   --on-teak-late: #ffb48f;
   --on-teak-ok: #d9e8b8;
   --mustard: #d6a01c;   /* critical path */
@@ -70,7 +71,7 @@ button, input, select { font: inherit; color: inherit; }
 /* ── Title block ─────────────────────────────────────────────── */
 .block {
   display: grid;
-  grid-template-columns: 190px auto minmax(0, 1fr) auto;
+  grid-template-columns: 250px minmax(0, 1fr) auto;
   align-items: stretch;
   background: var(--teak);
   color: var(--teak-ink);
@@ -78,17 +79,19 @@ button, input, select { font: inherit; color: inherit; }
   overflow: hidden;
 }
 .block > * { padding: 14px 18px; }
-.block > .block-photo { padding: 0; position: relative; min-height: 118px; }
+.block > .block-photo { padding: 0; position: relative; min-height: 124px; }
+.block-photo::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--cladding) 78%, transparent) 0%, transparent 58%);
+}
+.block-photo .logo {
+  position: absolute; z-index: 1; top: 10px; left: 14px;
+  color: var(--teak-ink);
+  text-shadow: 0 1px 2px color-mix(in srgb, var(--cladding) 70%, transparent);
+}
 .block-photo img {
   position: absolute; inset: 0; width: 100%; height: 100%;
   object-fit: cover; object-position: 96% 42%; display: block;
-}
-.block-mark {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 8px;
-  border-right: 1px solid color-mix(in srgb, var(--teak-ink) 22%, transparent);
 }
 .logo {
   font-family: var(--f-display);
@@ -359,14 +362,13 @@ kbd {
   .detail { position: static; }
 }
 @media (max-width: 860px) {
-  .block { grid-template-columns: 150px auto minmax(0, 1fr); }
+  .block { grid-template-columns: 200px minmax(0, 1fr); }
   .block-fields { grid-column: 1 / -1; border-left: 0; border-top: 1px solid color-mix(in srgb, var(--teak-ink) 22%, transparent); grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 @media (max-width: 520px) {
   .block { grid-template-columns: minmax(0, 1fr); }
   .block > .block-photo { min-height: 132px; }
   .block-photo img { object-position: 70% 45%; }
-  .block-mark { flex-direction: row; align-items: center; justify-content: space-between; border-right: 0; border-bottom: 1px solid color-mix(in srgb, var(--teak-ink) 22%, transparent); }
   .logo { font-size: 38px; }
   .block-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .block-fields > div:nth-child(3n) { border-right: 1px solid color-mix(in srgb, var(--teak-ink) 16%, transparent); }
