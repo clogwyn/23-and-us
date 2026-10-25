@@ -27,3 +27,6 @@ create table storage.objects (
 );
 alter table storage.objects enable row level security;
 grant select, insert, update, delete on storage.objects to authenticated;
+
+-- Supabase creates this publication for Realtime.
+create publication supabase_realtime;
