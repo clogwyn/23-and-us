@@ -203,4 +203,30 @@ do $$ begin
 end $$;
 
 reset role;
+
+-- ── 13. Budgets, rooms, document kinds, idempotent onboarding ───────────────
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000a1');
+do $$ declare pid uuid; hid uuid; b record; again uuid; begin
+  select id, household_id into pid, hid from public.projects where name = 'Kitchen refit';
+  update public.projects set budget_pence = 400000 where id = pid;
+  select * into b from public.v_project_budget where project_id = pid;
+  if b.budget_pence <> 400000 or b.budget_remaining_pence <> 400000 - 307050 or b.budget_vs_estimate_pence <> 400000 - 295000 then
+    raise exception 'FAIL: budget view %', row_to_json(b);
+  end if;
+  if (select count(*) from public.areas where household_id = hid) <> 9 then raise exception 'FAIL: default rooms not seeded'; end if;
+  insert into public.attachments (household_id, storage_path, mime, bytes, kind)
+    values (hid, hid || '/' || gen_random_uuid() || '/part-p.pdf', 'application/pdf', 1024, 'certificate');
+  again := public.create_household('Second try');
+  if again <> hid then raise exception 'FAIL: create_household made a second household'; end if;
+  if public.my_household() <> hid then raise exception 'FAIL: my_household'; end if;
+  if (select count(*) from public.household_members where household_id = hid and email is not null) <> 2 then raise exception 'FAIL: member emails'; end if;
+  begin
+    insert into public.attachments (household_id, storage_path, mime, bytes, kind)
+      values (hid, hid || '/' || gen_random_uuid() || '/x.mp4', 'video/mp4', 1024, 'video');
+    raise exception 'FAIL: unknown kind accepted';
+  exception when check_violation then null;
+  end;
+end $$;
+reset role;
 \echo 'ALL SECURITY TESTS PASSED'
