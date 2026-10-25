@@ -28,9 +28,9 @@ GitHub → **clogwyn/23-and-us** → **Settings** → **Secrets and variables** 
 ### `BACKUP_PASSPHRASE`
 A long random passphrase used to encrypt backups. **Store it in your password manager too — without it, backups cannot be opened.** Losing it is the same as having no backups.
 
-### First run
-1. Actions → **Backup** → **Run workflow**. Check it goes green and an artifact `db-backup-…` appears.
-2. Merge anything to `main` (or Actions → **CI** → **Run workflow** on `main`) to apply the schema.
+### First run (in this order)
+1. Merge to `main` (or Actions → **CI** → **Run workflow** on `main`). The `migrate` job applies the schema; check it's green.
+2. Actions → **Backup** → **Run workflow**. Check it goes green and an artifact `db-backup-…` appears. (Before step 1 it fails on purpose: it refuses to store a backup with no tables in it.)
 
 ## Restore
 
