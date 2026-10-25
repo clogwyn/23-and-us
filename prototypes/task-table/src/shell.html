@@ -1,0 +1,80 @@
+<title>23 &amp; Us Programme</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..800&family=Caprasimo&display=swap">
+<style>/*__CSS__*/</style>
+
+<div class="app" id="app">
+  <header class="block" aria-label="Project">
+    <div class="block-photo">
+      <img src="__HOUSE__" alt="Number 23 from the front path: timber cladding, white window frames and the green front door" width="540" height="386">
+      <span class="logo">23 <span class="amp">&amp;</span> Us</span>
+    </div>
+    <div class="block-title">
+      <span class="field-label">Project</span>
+      <h1 id="projectName">Kitchen &amp; rear extension</h1>
+    </div>
+    <dl class="block-fields" id="blockFields"></dl>
+  </header>
+
+  <div class="toolbar" role="toolbar" aria-label="View">
+    <div class="toolbar-group">
+      <span class="seg views" role="group" aria-label="View">
+        <button type="button" data-mode="table" aria-pressed="true">Table</button>
+        <button type="button" data-mode="board" aria-pressed="false">Board</button>
+        <button type="button" data-mode="gantt" aria-pressed="false">Gantt</button>
+      </span>
+      <label class="check"><input type="checkbox" id="fCritical"> Critical path only</label>
+      <label class="field-inline" for="fArea">Area
+        <select id="fArea"><option value="">All areas</option></select>
+      </label>
+    </div>
+    <div class="toolbar-group">
+      <button type="button" id="btnAdd" class="btn">Add task</button>
+      <button type="button" id="btnUndo" class="btn" disabled>Undo</button>
+      <button type="button" id="btnReset" class="btn btn-quiet">Reset sample</button>
+    </div>
+  </div>
+
+  <div class="banner" id="banner" hidden></div>
+
+  <main class="work">
+    <section class="sheet" aria-label="Tasks">
+      <div class="table-wrap" id="view-table">
+        <table class="grid" id="grid">
+          <colgroup>
+            <col class="c-tape"><col class="c-wbs"><col class="c-title"><col class="c-area"><col class="c-dur">
+            <col class="c-date"><col class="c-date"><col class="c-float"><col class="c-pred"><col class="c-status">
+          </colgroup>
+          <thead>
+            <tr>
+              <th class="tape" aria-hidden="true"></th>
+              <th>WBS</th><th>Task</th><th>Area</th><th class="num">Days</th>
+              <th>Start</th><th>Finish</th><th class="num">Float</th><th>Predecessors</th><th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+      <div id="view-board" hidden></div>
+      <div class="gantt-wrap" id="view-gantt" hidden></div>
+      <p class="keys" aria-label="Keyboard shortcuts">
+        <span><kbd>↑</kbd><kbd>↓</kbd> select</span>
+        <span><kbd>Enter</kbd> edit</span>
+        <span><kbd>Tab</kbd> indent</span>
+        <span><kbd>⇧</kbd><kbd>Tab</kbd> outdent</span>
+        <span><kbd>Alt</kbd><kbd>↑</kbd><kbd>↓</kbd> move</span>
+        <span><kbd>⇧</kbd><kbd>Enter</kbd> new task</span>
+        <span><kbd>⌫</kbd> delete</span>
+        <span><kbd>⌘</kbd><kbd>Z</kbd> undo</span>
+      </p>
+    </section>
+
+    <aside class="detail" id="detail" aria-label="Selected task"></aside>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+</div>
+
+<script>/*__JS__*/</script>
