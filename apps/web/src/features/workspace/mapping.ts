@@ -120,7 +120,7 @@ export async function save(sb: SupabaseClient, prev: WState, next: WState): Prom
   // Dependencies: removals first so a reversed link doesn't look like a loop
   const prevD = new Map(prev.deps.map((d) => [d.id, d]));
   const nextD = new Map(next.deps.map((d) => [d.id, d]));
-  const goneDeps = prev.deps.filter((d) => !nextD.has(d.id) && nextT.has(d.pred) && nextT.has(d.succ)).map((d) => d.id);
+  const goneDeps = prev.deps.filter((d) => !nextD.has(d.id)).map((d) => d.id);
   if (goneDeps.length) await run("Removing links", sb.from("task_dependencies").delete().in("id", goneDeps));
   for (const d of next.deps) {
     const before = prevD.get(d.id);
@@ -130,13 +130,18 @@ export async function save(sb: SupabaseClient, prev: WState, next: WState): Prom
       await run("Saving a link", sb.from("task_dependencies").update(r).eq("id", d.id));
   }
 
-  // Task deletions (children and links cascade in the database)
+  // Costs removed in this change, deleted explicitly *before* their task: the database would
+  // otherwise keep a deleted task's costs as unassigned project costs (task_id set null).
+  const prevC = new Map(prev.costs.map((c) => [c.id, c]));
+  const nextC = new Map(next.costs.map((c) => [c.id, c]));
+  const goneCosts = prev.costs.filter((c) => !nextC.has(c.id)).map((c) => c.id);
+  if (goneCosts.length) await run("Deleting costs", sb.from("cost_lines").delete().in("id", goneCosts));
+
+  // Task deletions (subtasks and links cascade in the database)
   const goneTasks = prev.tasks.filter((t) => !nextT.has(t.id)).map((t) => t.id);
   if (goneTasks.length) await run("Deleting tasks", sb.from("tasks").delete().in("id", goneTasks));
 
-  // Costs
-  const prevC = new Map(prev.costs.map((c) => [c.id, c]));
-  const nextC = new Map(next.costs.map((c) => [c.id, c]));
+  // Cost inserts and updates
   for (const c of next.costs) {
     const before = prevC.get(c.id);
     if (!before) await run("Adding a cost", sb.from("cost_lines").insert({ ...row(c, COST_COLS), ...base }));
@@ -145,8 +150,6 @@ export async function save(sb: SupabaseClient, prev: WState, next: WState): Prom
       if (diff) await run("Saving a cost", sb.from("cost_lines").update(diff).eq("id", c.id));
     }
   }
-  const goneCosts = prev.costs.filter((c) => !nextC.has(c.id) && (c.taskId === null || nextT.has(c.taskId))).map((c) => c.id);
-  if (goneCosts.length) await run("Deleting costs", sb.from("cost_lines").delete().in("id", goneCosts));
 }
 
 export async function load(sb: SupabaseClient, projectId: string): Promise<WState> {
